@@ -21,28 +21,17 @@ router.get('/seed',asyncHandler(
 router.post('/login',asyncHandler(
     async (req,res)=>{
         const {email,password} = req.body;
+        
         const user = await UserModel.findOne({email});
+        console.log(user);
         if(user && (await bcrypt.compare(password,user.password))) {
-            console.log("im fine")
             res.send(generateTokenResponse(user));
-            console.log("im fine")
+            
         }else {
             res.status(400).send("Email or password is not valid!")
         }
     }
 ))
-
-// router.post('/login',(req,res)=>{
-//     const {email,password} = req.body;
-//     const user = sample_users.find(user => user.email === email &&
-//          user.password === password);
-//     if(user) {
-//         res.send(generateTokenResponse(user));
-
-//     }else {
-//         res.status(400).send("User name or password is not valid!")
-//     }
-// })
 
 router.post('/register', asyncHandler(
     async (req,res)=>{
@@ -60,22 +49,31 @@ router.post('/register', asyncHandler(
             email:email.toLowerCase(),
             password:encryptedPassword,
             address,
-            isAdmin:false
+            isAdmin:false,
         }
+        console.log("Hey"+newUser.password)
         const dbUser = await UserModel.create(newUser);
         res.send(generateTokenResponse(dbUser))
+
     }
 ))
 
-
 const generateTokenResponse = (user:any)=>{
     const token = jwt.sign({
-        email:user.email,isAdmin:user.isAdmin
+        id:user.id,
+        email:user.email,
+        isAdmin:user.isAdmin
     },"SomeRandomText",{
         expiresIn:"30d"
     })
-    user.token = token;
-    return user;
+    return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        address: user.address,
+        isAdmin: user.isAdmin,
+        token: token
+      };
 }
 
 export default router;
